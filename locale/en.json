@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "title": "Disk manager",
+    "description": "Scan drive usage, list cleanup candidates by category, and clean caches from a fixed whitelist. Preview by default; nothing is deleted unless you ask.",
+    "detail": "docs/DETAIL.md"
+  },
+  "tools": {
+    "disk_overview": "Capacity and free space per drive",
+    "disk_scan": "Directory usage and very large files on one drive",
+    "disk_clean": "Whitelist cache cleanup (dry-run by default)"
+  }
+}

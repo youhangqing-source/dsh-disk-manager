@@ -1,0 +1,4 @@
+- insert:
+    - id: disk-manager
+      name: 'dsh-disk-manager'
+      config: {}

@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "title": "磁盘管家",
+    "description": "扫描各盘占用、按分类列出可清理项，并按白名单安全清理缓存；默认只预览不删除。",
+    "detail": "docs/DETAIL.md"
+  },
+  "tools": {
+    "disk_overview": "各分区容量与可用空间",
+    "disk_scan": "扫描指定盘符的目录占用与超大文件",
+    "disk_clean": "按白名单清理缓存（默认 dry-run）"
+  }
+}
