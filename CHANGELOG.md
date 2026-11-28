@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.2
+
+- `workspace_tidy` 新增 `linkOld`：改名后若该工作区有历史会话，在旧路径上建 junction，使会话日志里保存的 cwd 仍然可访问（否则恢复对话会报 `working-directory: directory does not exist`）。
+- 不改名时也会提示“该工作区有历史会话，旧路径已不存在”。
+
 ## 0.4.1
 
 - 修复：`workspace_tidy` 改名工作区后，会话桶（`~/.dsh/sessions/<路径转义>`）没有跟着改，导致该工作区里的对话无法打开。现在改名时会同步桶目录。

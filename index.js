@@ -228,7 +228,7 @@ function moveSessionBucket(fromDir, toDir, log) {
   }
 }
 
-function tidyWorkspaces(execute, removeEmpty) {
+function tidyWorkspaces(execute, removeEmpty, linkOld) {
   if (!fs.existsSync(WORKSPACE_JSON)) return '找不到 workspace.json，这个 profile 可能还没有工作区。'
   const raw = fs.readFileSync(WORKSPACE_JSON, 'utf8')
   const state = JSON.parse(raw.replace(/^\uFEFF/, ''))
@@ -268,12 +268,27 @@ function tidyWorkspaces(execute, removeEmpty) {
       done.push(`跳过 ${r.w.title}：${r.proposal} 已存在`)
       continue
     }
+    const oldBucket = path.join(os.homedir(), '.dsh', 'sessions', sessionBucketName(r.w.path))
+    const hadSessions = fs.existsSync(oldBucket)
     try {
-      fs.renameSync(r.w.path, target)
+      const from = r.w.path
+      fs.renameSync(from, target)
       state.tables.workspaces[r.id].path = target
       state.tables.workspaces[r.id].title = r.proposal
       done.push(`改名 ${r.w.title} → ${r.proposal}`)
-      moveSessionBucket(r.w.path, target, done)
+      moveSessionBucket(from, target, done)
+      if (hadSessions) {
+        if (linkOld) {
+          try {
+            fs.symlinkSync(target, from, 'junction')
+            done.push('  ↳ 旧路径已建 junction：历史会话保存的 cwd 仍然可访问')
+          } catch (error) {
+            done.push(`  ↳ junction 创建失败：${error instanceof Error ? error.message : String(error)}`)
+          }
+        } else {
+          done.push('  ↳ 该工作区有历史会话，旧路径已不存在；恢复对话会报 working-directory 错误。需要时加 linkOld: true')
+        }
+      }
     } catch (error) {
       done.push(`改名失败 ${r.w.title}: ${error instanceof Error ? error.message : String(error)}`)
     }
@@ -348,14 +363,15 @@ export function apply(ctx) {
   ctx.tools.register({
     name: 'workspace_tidy',
     description:
-      '检查并规整 DSH 工作区：列出每个工作区的路径、体积、会话数与建议命名；execute=true 时按「项目-/实验-/工具-」前缀重命名目录并同步 workspace.json，removeEmpty=true 时移除目录为空的工区。默认只预览，改名与删除都会先备份 workspace.json。',
+      '检查并规整 DSH 工作区：列出每个工作区的路径、体积、会话数与建议命名；execute=true 时按「项目-/实验-/工具-」前缀重命名目录并同步 workspace.json 与会话桶，removeEmpty=true 时移除目录为空的工区，linkOld=true 时在旧路径建 junction 以保住历史会话的 cwd。默认只预览，改名与删除都会先备份 workspace.json。',
     parameters: {
       execute: { type: 'boolean', description: 'true 才真正改名/移除；省略仅预览。' },
       removeEmpty: { type: 'boolean', description: '配合 execute 使用：把目录为空或已不存在的工作区从列表移除。' },
+      linkOld: { type: 'boolean', description: '配合 execute 使用：改名后在有历史会话的旧路径上建 junction，使历史对话仍能打开。' },
     },
     output: TEXT_OUTPUT,
     execute(args) {
-      return Promise.resolve({ text: tidyWorkspaces(Boolean(args.execute), Boolean(args.removeEmpty)) })
+      return Promise.resolve({ text: tidyWorkspaces(Boolean(args.execute), Boolean(args.removeEmpty), Boolean(args.linkOld)) })
     },
   })
 }

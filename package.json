@@ -1,6 +1,6 @@
 {
   "name": "dsh-disk-manager",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "module",
   "description": "Disk usage scanning, whitelist cleanup, and workspace tidy tools for DeepSeek Harness",
   "license": "MIT",
