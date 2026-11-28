@@ -181,8 +181,7 @@ function proposeTitle(title) {
   return '项目-' + base
 }
 
-function countFiles(dir, budget = { left: 50000 }) {
-  let n = 0
+function countFiles(dir, budget = { left: 50000 }) {  let n = 0
   const walk = (d) => {
     let entries
     try {
@@ -198,6 +197,35 @@ function countFiles(dir, budget = { left: 50000 }) {
   }
   walk(dir)
   return n
+}
+
+/**
+ * Session logs live under ~/.dsh/sessions/<bucket>, where the bucket name is the
+ * working directory path with ':' removed, '\' turned into '-', and non-ASCII
+ * characters escaped as ~XXXX (uppercase UTF-16 code unit). Renaming a workspace
+ * folder without renaming its bucket makes every conversation in it unreachable.
+ */
+function sessionBucketName(dir) {
+  const flat = dir.replace(/:/g, '').replace(/\\/g, '-')
+  let escaped = ''
+  for (const ch of flat) {
+    const code = ch.codePointAt(0)
+    escaped += code > 127 ? `~${code.toString(16).toUpperCase().padStart(4, '0')}` : ch
+  }
+  return `--${escaped}--`
+}
+
+function moveSessionBucket(fromDir, toDir, log) {
+  const sessionsRoot = path.join(os.homedir(), '.dsh', 'sessions')
+  const from = path.join(sessionsRoot, sessionBucketName(fromDir))
+  const to = path.join(sessionsRoot, sessionBucketName(toDir))
+  try {
+    if (!fs.existsSync(from) || fs.existsSync(to)) return
+    fs.renameSync(from, to)
+    log.push('  ↳ 会话桶已同步（对话可继续打开）')
+  } catch (error) {
+    log.push(`  ↳ 会话桶同步失败：${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 function tidyWorkspaces(execute, removeEmpty) {
@@ -245,6 +273,7 @@ function tidyWorkspaces(execute, removeEmpty) {
       state.tables.workspaces[r.id].path = target
       state.tables.workspaces[r.id].title = r.proposal
       done.push(`改名 ${r.w.title} → ${r.proposal}`)
+      moveSessionBucket(r.w.path, target, done)
     } catch (error) {
       done.push(`改名失败 ${r.w.title}: ${error instanceof Error ? error.message : String(error)}`)
     }

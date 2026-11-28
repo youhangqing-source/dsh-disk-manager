@@ -53,6 +53,8 @@ dsh plugin --profile web add link:D:/dsh-plugins/dsh-disk-manager
 - 清理与规整默认 dry-run；`workspace.json` 每次写入前备份为 `.bak-<时间戳>`；
 - 当前会话所在目录不会被改名。
 
+> 关于会话：dsh 把每个工作区的会话存在 `~/.dsh/sessions/<路径转义>` 下。改名工作区文件夹时如果不一起改这个目录，该工作区里的历史对话就会打不开——`workspace_tidy` 会自动同步这个桶目录。
+
 ## 结构
 
 ```
